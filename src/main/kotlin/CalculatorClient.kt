@@ -1,9 +1,13 @@
 package org.example
 
 import io.grpc.ManagedChannelBuilder
+import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import org.example.CalculatorServiceOuterClass.Number
 
 class CalculatorClient {
-    fun calClientMethods() {
+    suspend fun calClientMethods() {
         val channel = ManagedChannelBuilder.forAddress("localhost", 15001).usePlaintext().build()
         val stub = CalculatorServiceGrpc.newBlockingStub(channel)
         val responseAddition = stub.addition(
@@ -23,5 +27,46 @@ class CalculatorClient {
         println("Subtraction response: $responseSubtraction")
         println("Multiplication response: $responseMultiplication")
         println("Division response: $responseDivision")
+
+        val resPrimeNos = stub.getPrimeNumber(Number.newBuilder().setNumber(20).build())
+
+        resPrimeNos.forEach { prime ->
+            println("prime number response : $prime")
+        }
+
+        val coroutineStub = CalculatorServiceGrpc.newStub(channel)
+        val numbers = listOf(
+            Number.newBuilder().setNumber(4).build(),
+            Number.newBuilder().setNumber(2).build(),
+            Number.newBuilder().setNumber(3).build(),
+            Number.newBuilder().setNumber(5).build(),
+            Number.newBuilder().setNumber(1).build()
+        )
+        val observer = object : StreamObserver<Number> {
+            override fun onNext(p0: Number?) {
+                if (p0 != null) {
+                    println("Response : ${p0.number}")
+                } else println("null response")
+            }
+
+            override fun onError(p0: Throwable?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onCompleted() {
+                println("Finished responding...")
+            }
+        }
+
+        val requestObsAvg = coroutineStub.calculateAverage(observer)
+        val reqObserverSquare = coroutineStub.calculateSquareOfNumbers(observer)
+        for (num in numbers) {
+            println("Request : ${num.number}")
+            requestObsAvg.onNext(num)
+            reqObserverSquare.onNext(num)
+        }
+        requestObsAvg.onCompleted()
+        reqObserverSquare.onCompleted()
+
     }
 }

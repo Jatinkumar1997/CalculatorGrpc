@@ -2,7 +2,7 @@ package org.example
 
 import io.grpc.ServerBuilder
 
-fun main() {
+suspend fun main() {
     helloServer()
     CalculatorClient().calClientMethods()
 }
