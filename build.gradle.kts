@@ -23,6 +23,8 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:3.25.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0-RC2")
 }
 
 tasks.test {

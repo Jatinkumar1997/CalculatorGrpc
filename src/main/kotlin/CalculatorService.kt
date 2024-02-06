@@ -1,5 +1,7 @@
 package org.example
 
+import io.grpc.Status.INVALID_ARGUMENT
+import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.flow.*
 import org.example.CalculatorServiceOuterClass.CalculatorReply
 
@@ -17,6 +19,9 @@ class CalculatorService : CalculatorServiceGrpcKt.CalculatorServiceCoroutineImpl
     }
 
     override suspend fun division(request: CalculatorServiceOuterClass.CalculatorRequest): CalculatorServiceOuterClass.CalculatorReply {
+        if (request.number2 == 0.0) {
+            throw StatusRuntimeException(INVALID_ARGUMENT.withDescription("Division by 0 not valid"))
+        }
         return CalculatorReply.newBuilder().setResult(request.number1 / request.number2).build()
     }
 
@@ -45,13 +50,10 @@ class CalculatorService : CalculatorServiceGrpcKt.CalculatorServiceCoroutineImpl
     }
 
     private fun isPrime(num: Int): Boolean {
-        if (num <= 1) return false
-        if (num <= 3) return true
-        if (num % 2 == 0 || num % 3 == 0) return false
-        var n = num
-        for (i in 5 until n step 6) {
-            if (n % i == 0 || n % (i + 2) == 0) return false
-            n = i * i
+        for (i in 2..num / 2) {
+            if (num % i == 0) {
+                return false
+            }
         }
         return true
     }

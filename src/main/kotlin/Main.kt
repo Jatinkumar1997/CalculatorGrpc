@@ -1,15 +1,16 @@
 package org.example
 
 import io.grpc.ServerBuilder
+import org.example.interceptor.LogServerInterceptor
 
-suspend fun main() {
+fun main() {
     helloServer()
-    CalculatorClient().calClientMethods()
+    CalculatorClient().callClientMethods()
 }
 
 fun helloServer() {
-    val helloService = CalculatorService()
-    val server = ServerBuilder.forPort(15001).addService(helloService).build()
+    val calculatorService = CalculatorService()
+    val server = ServerBuilder.forPort(15001).addService(calculatorService).intercept(LogServerInterceptor()).build()
 
     Runtime.getRuntime().addShutdownHook(Thread {
         server.shutdown()

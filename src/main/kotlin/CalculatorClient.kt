@@ -1,14 +1,18 @@
 package org.example
 
 import io.grpc.ManagedChannelBuilder
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import org.example.CalculatorServiceOuterClass.Number
+import org.example.interceptor.LogClientInterceptor
 
 class CalculatorClient {
-    suspend fun calClientMethods() {
-        val channel = ManagedChannelBuilder.forAddress("localhost", 15001).usePlaintext().build()
+    fun callClientMethods() {
+        val channel =
+            ManagedChannelBuilder.forAddress("localhost", 15001).usePlaintext().intercept(LogClientInterceptor())
+                .build()
         val stub = CalculatorServiceGrpc.newBlockingStub(channel)
         val responseAddition = stub.addition(
             CalculatorServiceOuterClass.CalculatorRequest.newBuilder().setNumber1(1.0).setNumber2(2.0).build()
@@ -19,16 +23,20 @@ class CalculatorClient {
         val responseMultiplication = stub.multiplication(
             CalculatorServiceOuterClass.CalculatorRequest.newBuilder().setNumber1(1.0).setNumber2(2.0).build()
         )
-        val responseDivision = stub.division(
-            CalculatorServiceOuterClass.CalculatorRequest.newBuilder().setNumber1(1.0).setNumber2(0.0).build()
-        )
+        try {
+            val responseDivision = stub.division(
+                CalculatorServiceOuterClass.CalculatorRequest.newBuilder().setNumber1(1.0).setNumber2(0.0).build()
+            )
+            println("Division response: $responseDivision")
+        } catch (e: StatusRuntimeException) {
+            println("Error occurred while division: $e")
+        }
 
         println("Addition response: $responseAddition")
         println("Subtraction response: $responseSubtraction")
         println("Multiplication response: $responseMultiplication")
-        println("Division response: $responseDivision")
 
-        val resPrimeNos = stub.getPrimeNumber(Number.newBuilder().setNumber(20).build())
+        val resPrimeNos = stub.getPrimeNumber(Number.newBuilder().setNumber(10).build())
 
         resPrimeNos.forEach { prime ->
             println("prime number response : $prime")
